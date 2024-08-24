@@ -1,25 +1,51 @@
+/*
+ * BrainFuck Interpreter, BFI
+ *
+ * This program is a simple 'n small interpreter
+ * for the brainfuck esolang
+ *
+ * */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+enum opts_e { DEF = 0b0000, PARSE = 0b0001, PRINT_PARSED = 0b0010 };
+// DEF : no params
+// PARSE : --parse
+// PRINT_PARSED : --print-parsed
+
+// prints the help manual
+void help();
+
 int main(int argc, char **argv) {
   // Variables declaration -----------------------------------------------
 
+  // brainf*ck source file
   FILE *bf = NULL;
+  // source file size, raw_buff parsing help variable
   size_t bf_size = 0, bp = 0;
+  // buffer, raw_buffer, interpreting pointer
   char *buff = NULL, *raw_buff = NULL, *p = NULL;
 
-  char cells[32768] = {0};
-  short data_ptr = 0;
+  char cells[32768] = {0}, options = 0; // memory array, bfi options
+  short data_ptr = 0;                   // data pointer
 
   // Argument parsing ----------------------------------------------------
 
-  if (argc < 2) {
-    fprintf(stderr, "Missing brainf*ck source file to interpret");
+  if (argc < 2) { // missing source file
+    fprintf(stderr, "Missing brainf*ck source file to interpret\n");
+    fprintf(stderr, "try bfi --help to get help");
+    return 1;
     return 1;
   }
-  if (strcmp(strrchr(argv[1], '.'), ".bf")) {
-    fprintf(stderr, "%s is not a brainf*ck source file", argv[1]);
+  if (!strcmp(argv[1], "--help")) {
+    help();
+    return 0;
+  }
+  if (strcmp(strrchr(argv[1], '.'), ".bf")) { // file is nota .bf file
+    fprintf(stderr, "%s is not a brainf*ck source file\n", argv[1]);
+    fprintf(stderr, "try bfi --help to get help");
     return 1;
   }
   bf = fopen(argv[1], "r");
@@ -28,18 +54,29 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  if (argc > 2) { // extra params proccessing
+    for (int i = 2; i < argc; i++) {
+      if (!strcmp(argv[i], "--parse")) {
+        options |= PARSE;
+      } else if (!strcmp(argv[i], "--print-parsed")) {
+        options |= PRINT_PARSED;
+      }
+    }
+  }
+
   // Buffer initialization -----------------------------------------------
 
   fseek(bf, 0, SEEK_END);
-  bf_size = ftell(bf);
-  raw_buff = (char *)malloc(bf_size);
+  bf_size = ftell(bf); // gets source file size
   rewind(bf);
-  if (!raw_buff) {
+
+  raw_buff = (char *)malloc(bf_size);
+  if (!raw_buff) { // creates the raw buffer
     fclose(bf);
     return 1;
   }
 
-  fread(raw_buff, 1, bf_size, bf);
+  fread(raw_buff, 1, bf_size, bf); // read contents of source_file to rawbuffer
   fclose(bf);
 
   buff = (char *)malloc(bf_size);
@@ -66,28 +103,44 @@ int main(int argc, char **argv) {
     }
     p++;
   }
-  buff = realloc(buff, bp);
+  buff = realloc(buff, bp + 1);
+
   if (!buff) {
     free(raw_buff);
+    free(buff);
+    return 1;
   }
+
   free(raw_buff);
-  // Interpreting --------------------------------------------------------
-  if (argc > 2) {
-    if (!strcmp(argv[2], "--print-parsed")) {
-      puts("Parsed code:");
-      fwrite(buff, 1, bp, stdout);
-      puts("\n");
-    }
+
+  // params
+
+  if (options & PRINT_PARSED) {
+    puts("Parsed code:");
+    fwrite(buff, 1, bp, stdout);
+    puts("\n");
   }
+  if (options & PARSE) {
+    char p_name[strlen(argv[1]) + strlen("_p") + 1];
+    strcpy(p_name, strtok(argv[1], "."));
+    strcat(p_name, "_p");
+    strcat(p_name, ".bf\0");
+    FILE *bfi_p = fopen(p_name, "w");
+    fwrite(buff, 1, bp, bfi_p);
+
+    free(buff);
+    return 0;
+  }
+  // Interpreting --------------------------------------------------------
   p = buff;
   while (*p) {
 
     switch (*p) {
     case '>':
-      data_ptr = data_ptr == 32767 ? 0 : data_ptr + 1;
+      data_ptr = (data_ptr == 32767) ? 0 : data_ptr + 1;
       break;
     case '<':
-      data_ptr = data_ptr == 0 ? 32767 : data_ptr - 1;
+      data_ptr = (data_ptr == 0) ? 32767 : data_ptr - 1;
       break;
     case '+':
       cells[data_ptr]++;
@@ -103,30 +156,25 @@ int main(int argc, char **argv) {
       break;
     case '[': // TODO nested loops
       if (!cells[data_ptr]) {
-        short skip = 0;
-        while (*p != ']' && skip == 0) {
-          if (*p == '[') {
-            skip++;
-          }
-          if (*p == ']' && skip > 0) {
-            skip--;
-          }
+        short l = 1;
+        while (l > 0) {
           p++;
+          if (*p == '[')
+            l++;
+          else if (*p == ']')
+            l--;
         }
-        p += 2;
       }
       break;
     case ']':
       if (cells[data_ptr]) {
-        short skip = 0;
-        while (*p != '[' && skip == 0) {
-          if (*p == ']') {
-            skip++;
-          }
-          if (*p == ']' && skip > 0) {
-            skip--;
-          }
+        short l = 1;
+        while (l > 0) {
           p--;
+          if (*p == '[')
+            l--;
+          else if (*p == ']')
+            l++;
         }
       }
       break;
@@ -141,4 +189,32 @@ int main(int argc, char **argv) {
 
   free(buff);
   return 0;
+}
+
+void help() {
+  // bfi help manual
+  fprintf(stdout,
+          "-------------BrainFuck Interpreter help manual-------------\n\n");
+  fprintf(stdout, "SYNOPSIS: \n");
+  fprintf(stdout,
+          "\tBrainFuck Interpreter, or BFI is a simple and lightweight\n");
+  fprintf(stdout, "\tBrainfuck esolang interpreter.\n");
+  fprintf(stdout, "\nUSE: \n");
+  fprintf(stdout, "\tthe next line is a normal bfi use: \n");
+  fprintf(stdout, "\t ~> bfi <program_path.bf> [--params_list]\n");
+  fprintf(stdout, "\t bfi : BFI.\n");
+  fprintf(stdout, "\t program_path : the path for your brainfuck program\n");
+  fprintf(stdout, "\t\t WARN: it only accepts .bf files.\n");
+  fprintf(stdout, "\t --params_list : you list the optional params to give\n");
+  fprintf(stdout, "\t\t to the bfi, all params start with \"--\".\n");
+  fprintf(stdout, "\nPARAMS: \n");
+  fprintf(stdout, "\t--parse: \n");
+  fprintf(stdout, "\t\twrites the parsed code(code without commentarys,\n");
+  fprintf(stdout, "\t\tnew lines, spaces, etc...) to a file named\n");
+  fprintf(stdout, "\t\t<bf_code>_p.bf and DON'T interpret the program.\n");
+  fprintf(stdout, "\t--print-parsed\n");
+  fprintf(stdout, "\t\tprints the parsed code(coide without commentarys,\n");
+  fprintf(stdout, "\t\tnew lines, spaces, etc...) to the console and\n");
+  fprintf(stdout, "\t\tthen interprets the program.\n");
+  return;
 }
