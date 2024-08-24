@@ -1,14 +1,21 @@
 CC := gcc
-CFLAGS := -Wall -Wextra -O2
-GDB := 
+DBGFLAGS := -O0 -Wall -Wextra -g
+RLSFLAGS := -O2 -Wall
+TARGET := bfi
+
+.PHONY: release debug clean-w clean-u
+
+debug: bfi.o
+	$(CC) $< -o $(TARGET) $(DBGFLAGS)
+
+release: bfi.o
+	$(CC) $< -o $(TARGET) $(RLSFLAGS)
 
 
-ifeq ($(GDB), true)
-	CFLAGS += -g
-endif
+bfi.o: bfi.c
+	$(CC) -c $<
 
-.PHONY: bfi 
-
-bfi: bfi.c
-	$(CC) $^ -o $@ $(CFLAGS)
-
+clean-w:
+	del /F bfi.o
+clean-u:
+	rm -f bfi.o

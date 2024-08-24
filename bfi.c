@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
   // source file size, raw_buff parsing help variable
   size_t bf_size = 0, bp = 0;
   // buffer, raw_buffer, interpreting pointer
-  char *buff = NULL, *raw_buff = NULL, *p = NULL;
+  char *buff = NULL, *p = NULL, line[256] = {0};
 
   char cells[32768] = {0}, options = 0; // memory array, bfi options
   short data_ptr = 0;                   // data pointer
@@ -70,56 +70,48 @@ int main(int argc, char **argv) {
   bf_size = ftell(bf); // gets source file size
   rewind(bf);
 
-  raw_buff = (char *)malloc(bf_size);
-  if (!raw_buff) { // creates the raw buffer
-    fclose(bf);
-    return 1;
-  }
-
-  fread(raw_buff, 1, bf_size, bf); // read contents of source_file to rawbuffer
-  fclose(bf);
-
   buff = (char *)malloc(bf_size);
   if (!buff) {
-    free(raw_buff);
     return 1;
   }
-  p = raw_buff;
-  while (*p) {
-    switch (*p) {
-    case '>':
-    case '<':
-    case '+':
-    case '-':
-    case '.':
-    case ',':
-    case '[':
-    case ']':
-      buff[bp] = *p;
-      bp++;
-      break;
-    default:
-      break;
+
+  while (fgets(line, sizeof(line), bf)) {
+    if (line[0] == '#')
+      continue;
+    strcpy(line, strtok(line, "#"));
+    int len = strlen(line);
+    if (line[len - 1] == '\n')
+      line[len - 1] = '\0';
+
+    p = line;
+    while (*p) {
+      switch (*p) {
+      case '>':
+      case '<':
+      case '+':
+      case '-':
+      case '.':
+      case ',':
+      case '[':
+      case ']':
+        buff[bp] = *p;
+        bp++;
+        break;
+      default:
+        break;
+      }
+      p++;
     }
-    p++;
   }
   buff = realloc(buff, bp + 1);
 
   if (!buff) {
-    free(raw_buff);
     free(buff);
     return 1;
   }
 
-  free(raw_buff);
-
   // params
 
-  if (options & PRINT_PARSED) {
-    puts("Parsed code:");
-    fwrite(buff, 1, bp, stdout);
-    puts("\n");
-  }
   if (options & PARSE) {
     char p_name[strlen(argv[1]) + strlen("_p") + 1];
     strcpy(p_name, strtok(argv[1], "."));
@@ -130,6 +122,11 @@ int main(int argc, char **argv) {
 
     free(buff);
     return 0;
+  }
+  if (options & PRINT_PARSED) {
+    puts("Parsed code:");
+    fwrite(buff, 1, bp, stdout);
+    puts("\n");
   }
   // Interpreting --------------------------------------------------------
   p = buff;
