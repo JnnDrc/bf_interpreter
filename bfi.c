@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
 
   if (argc < 2) { // missing source file
     fprintf(stderr, "Missing brainf*ck source file to interpret\n");
-    fprintf(stderr, "try bfi --help to get help");
+    fprintf(stderr, "try bfi --help to get help\n");
     return 1;
     return 1;
   }
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
   }
   if (strcmp(strrchr(argv[1], '.'), ".bf")) { // file is nota .bf file
     fprintf(stderr, "%s is not a brainf*ck source file\n", argv[1]);
-    fprintf(stderr, "try bfi --help to get help");
+    fprintf(stderr, "try bfi --help to get help\n");
     return 1;
   }
   bf = fopen(argv[1], "r");
