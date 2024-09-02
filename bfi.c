@@ -208,7 +208,7 @@ void help() {
   fprintf(stdout, "\t--parse: \n");
   fprintf(stdout, "\t\twrites the parsed code(code without commentarys,\n");
   fprintf(stdout, "\t\tnew lines, spaces, etc...) to a file named\n");
-  fprintf(stdout, "\t\t<bf_code>_p.bf and DON'T interpret the program.\n");
+  fprintf(stdout, "\t\t<bf_code>_p.bf and then interprets the program.\n");
   fprintf(stdout, "\t--print-parsed\n");
   fprintf(stdout, "\t\tprints the parsed code(coide without commentarys,\n");
   fprintf(stdout, "\t\tnew lines, spaces, etc...) to the console and\n");
