@@ -1,21 +1,18 @@
 CC := gcc
 DBGFLAGS := -O0 -Wall -Wextra -g
-RLSFLAGS := -O2 -Wall
+RLSFLAGS := -O3 -Wall
+SRC := bfi.c
+OBJ := bfi.o
 TARGET := bfi
 
-.PHONY: release debug clean-w clean-u
+.PHONY: debug clean-w clean-u
 
-debug: bfi.o
-	$(CC) $< -o $(TARGET) $(DBGFLAGS)
-
-release: bfi.o
+$(TARGET): $(OBJ)
 	$(CC) $< -o $(TARGET) $(RLSFLAGS)
 
-
-bfi.o: bfi.c
+$(OBJ): $(SRC)
 	$(CC) -c $<
 
-clean-w:
-	del /F bfi.o
-clean-u:
-	rm -f bfi.o
+debug: $(OBJ)
+	$(CC) $< -o bfi-g $(DBGFLAGS)
+

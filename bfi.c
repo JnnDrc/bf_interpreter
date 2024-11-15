@@ -10,10 +10,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-enum opts_e { DEF = 0b0000, PARSE = 0b0001, PRINT_PARSED = 0b0010 };
+enum opts_e { DEF = 0b0000, PARSE = 0b0001, PRINT = 0b0010 };
 // DEF : no params
 // PARSE : --parse
-// PRINT_PARSED : --print-parsed
+// PRINT : --print
 
 // prints the help manual
 void help();
@@ -25,8 +25,8 @@ int main(int argc, char **argv) {
   FILE *bf = NULL;
   // source file size, raw_buff parsing help variable
   size_t bf_size = 0, bp = 0;
-  // buffer, raw_buffer, interpreting pointer
-  char *buff = NULL, *p = NULL, line[256] = {0};
+  // buffer, interpreting pointer, line buffer
+  char *buff = NULL, *p = NULL, line[512] = {0};
 
   char cells[32768] = {0}, options = 0; // memory array, bfi options
   short data_ptr = 0;                   // data pointer
@@ -34,8 +34,8 @@ int main(int argc, char **argv) {
   // Argument parsing ----------------------------------------------------
 
   if (argc < 2) { // missing source file
-    fprintf(stderr, "Missing brainf*ck source file to interpret\n");
-    fprintf(stderr, "try bfi --help to get help\n");
+    fprintf(stderr, "ERROR: Missing brainf*ck source file to interpret\n");
+    fprintf(stderr, "HELP: try bfi --help to get help\n");
     return 1;
     return 1;
   }
@@ -44,13 +44,13 @@ int main(int argc, char **argv) {
     return 0;
   }
   if (strcmp(strrchr(argv[1], '.'), ".bf")) { // file is nota .bf file
-    fprintf(stderr, "%s is not a brainf*ck source file\n", argv[1]);
-    fprintf(stderr, "try bfi --help to get help\n");
+    fprintf(stderr, "ERROR: %s is not a brainf*ck source file\n", argv[1]);
+    fprintf(stderr, "HELP: try bfi --help to get help\n");
     return 1;
   }
   bf = fopen(argv[1], "r");
   if (!bf) {
-    fprintf(stderr, "Can't open brainf*ck source file %s", argv[1]);
+    fprintf(stderr, "ERROR: Can't open brainf*ck source file %s", argv[1]);
     return 1;
   }
 
@@ -58,8 +58,8 @@ int main(int argc, char **argv) {
     for (int i = 2; i < argc; i++) {
       if (!strcmp(argv[i], "--parse")) {
         options |= PARSE;
-      } else if (!strcmp(argv[i], "--print-parsed")) {
-        options |= PRINT_PARSED;
+      } else if (!strcmp(argv[i], "--print")) {
+        options |= PRINT;
       }
     }
   }
@@ -72,6 +72,7 @@ int main(int argc, char **argv) {
 
   buff = (char *)malloc(bf_size);
   if (!buff) {
+    fprintf(stderr,"ERROR: Failed to allocate needed resources");
     return 1;
   }
 
@@ -106,7 +107,7 @@ int main(int argc, char **argv) {
   buff = realloc(buff, bp + 1);
 
   if (!buff) {
-    free(buff);
+    fprintf(stderr,"ERROR: Failed to allocate needed resources");
     return 1;
   }
 
@@ -123,7 +124,7 @@ int main(int argc, char **argv) {
     free(buff);
     return 0;
   }
-  if (options & PRINT_PARSED) {
+  if (options & PRINT) {
     puts("Parsed code:");
     fwrite(buff, 1, bp, stdout);
     puts("\n");
@@ -151,7 +152,7 @@ int main(int argc, char **argv) {
     case ',':
       cells[data_ptr] = getc(stdin);
       break;
-    case '[': // TODO nested loops
+    case '[':
       if (!cells[data_ptr]) {
         short l = 1;
         while (l > 0) {
@@ -176,6 +177,7 @@ int main(int argc, char **argv) {
       }
       break;
     default:
+      fprintf(stderr,"ERROR: unexpected character character '%c'",*p);
       break;
     }
 
@@ -209,9 +211,9 @@ void help() {
   fprintf(stdout, "\t\twrites the parsed code(code without commentarys,\n");
   fprintf(stdout, "\t\tnew lines, spaces, etc...) to a file named\n");
   fprintf(stdout, "\t\t<bf_code>_p.bf and DON'T interpret the program.\n");
-  fprintf(stdout, "\t--print-parsed\n");
+  fprintf(stdout, "\t--print\n");
   fprintf(stdout, "\t\tprints the parsed code(coide without commentarys,\n");
   fprintf(stdout, "\t\tnew lines, spaces, etc...) to the console and\n");
-  fprintf(stdout, "\t\tthen interprets the program.\n");
+  fprintf(stdout, "\t\tthen inteprets the program.\n");
   return;
 }

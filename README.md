@@ -19,19 +19,19 @@ if you don't know what brainfuck is, look [here](https://en.wikipedia.org/wiki/B
    params like this `bfi <bf_program> [--opt_params]`.
    to see the list of optional params, type `bfi --help`.
 
+> pre built binaries might not be the most updated
+
 ## Compile
 
-There's two build modes:
+To compile you will need GNU Make and GCC.
 
-- debug : for for testing features
-- release : for release builds
+```sh
+git clone https://github.com/JnnDrc/bf_interpreter
+cd bf_interpreter
+make
+```
 
-just type make <build_mode> to compile
-you can use clean-w or clean-u for cleanig the
-object generated, -w stands for windows and -u for unix-like
-
-if you want to make a build to distribute in the bin folder, i recommend
-using release mode
+if you want to use gdb, type `make debug` and use the 'bfi-g' executable
 
 ## Repo contents
 
