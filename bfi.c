@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 enum opts_e { DEF = 0b0000, PARSE = 0b0001, PRINT = 0b0010 };
 // DEF : no params
@@ -28,8 +29,8 @@ int main(int argc, char **argv) {
   // buffer, interpreting pointer, line buffer
   char *buff = NULL, *p = NULL, line[512] = {0};
 
-  char cells[32768] = {0}, options = 0; // memory array, bfi options
-  short data_ptr = 0;                   // data pointer
+  int8_t cells[32768] = {0}, options = 0; // memory array, bfi options
+  uint16_t data_ptr = 0;                // data pointer
 
   // Argument parsing ----------------------------------------------------
 
@@ -42,11 +43,6 @@ int main(int argc, char **argv) {
   if (!strcmp(argv[1], "--help")) {
     help();
     return 0;
-  }
-  if (strcmp(strrchr(argv[1], '.'), ".bf")) { // file is nota .bf file
-    fprintf(stderr, "ERROR: %s is not a brainf*ck source file\n", argv[1]);
-    fprintf(stderr, "HELP: try bfi --help to get help\n");
-    return 1;
   }
   bf = fopen(argv[1], "r");
   if (!bf) {
@@ -105,11 +101,12 @@ int main(int argc, char **argv) {
     }
   }
   buff = realloc(buff, bp + 1);
-
   if (!buff) {
     fprintf(stderr,"ERROR: Failed to allocate needed resources");
     return 1;
   }
+  buff[bp] = '\0';
+
 
   // params
 
@@ -177,7 +174,7 @@ int main(int argc, char **argv) {
       }
       break;
     default:
-      fprintf(stderr,"ERROR: unexpected character character '%c'",*p);
+      fprintf(stderr,"ERROR: unexpected character '%c'",*p);
       break;
     }
 

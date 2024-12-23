@@ -1,6 +1,6 @@
 CC := gcc
 DBGFLAGS := -O0 -Wall -Wextra -g
-RLSFLAGS := -O3 -Wall
+RLSFLAGS := -O3 -Wall -Wextra
 SRC := bfi.c
 OBJ := bfi.o
 TARGET := bfi
